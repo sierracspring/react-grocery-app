@@ -1,24 +1,104 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import "./App.css";
+import ProductGrid from "./components/ProductGrid";
+import Modal from "./components/Modal";
+import AddEditProductForm from "./components/AddEditProductForm";
+import {
+  getProducts,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+} from "./ProductService";
 
 function App() {
+  const [products, setProducts] = React.useState(() => {
+    fetchProducts();
+
+    return [];
+  });
+  const [
+    isShowingAddEditProductModal,
+    setIsShowingAddEditProductModal,
+  ] = React.useState(false);
+  const [currentProduct, setCurrentProduct] = React.useState(null);
+
+  function fetchProducts() {
+    getProducts()
+      .then((response) => {
+        setProducts(response.data);
+      })
+      .catch((error) => {
+        debugger;
+      });
+  }
+
+  function handleAddProductClick() {
+    setCurrentProduct(null);
+    setIsShowingAddEditProductModal(true);
+  }
+
+  function handleCloseModal() {
+    setIsShowingAddEditProductModal(false);
+  }
+
+  function handleCreateProduct(product) {
+    createProduct(product)
+      .then((response) => {
+        setIsShowingAddEditProductModal(false);
+        alert("SUCCESSFULLY CREATED NEW ITEM");
+        fetchProducts();
+      })
+      .catch((error) => {
+        alert(error);
+      });
+  }
+
+  function handleEditProduct(product) {
+    setCurrentProduct(product);
+    setIsShowingAddEditProductModal(true);
+  }
+
+  function handleUpdateProduct(product) {
+    updateProduct(product._id, product)
+      .then((response) => {
+        setIsShowingAddEditProductModal(false);
+        alert("SUCCESSFULLY UPDATE PRODUCT");
+        fetchProducts();
+      })
+      .catch((error) => {
+        alert(error);
+      });
+  }
+
+  function handleDeleteProduct(productId) {
+    deleteProduct(productId)
+      .then((response) => {
+        setIsShowingAddEditProductModal(false);
+        alert("SUCCESSFULLY DELETED PRODUCT");
+        fetchProducts();
+      })
+      .catch((error) => {
+        alert(error);
+      });
+  }
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <button onClick={handleAddProductClick}>CREATE NEW PRODUCT</button>
+
+      {isShowingAddEditProductModal ? (
+        <Modal>
+          <AddEditProductForm
+            existingProduct={currentProduct}
+            handleCloseModal={handleCloseModal}
+            handleCreateProduct={handleCreateProduct}
+            handleUpdateProduct={handleUpdateProduct}
+            handleDeleteProduct={handleDeleteProduct}
+          />
+        </Modal>
+      ) : null}
+      <h1>React Grocery App</h1>
+      <ProductGrid products={products} handleEditProduct={handleEditProduct} />
     </div>
   );
 }
